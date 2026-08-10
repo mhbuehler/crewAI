@@ -1,0 +1,61 @@
+{
+  "status": "PASS",
+  "ollama_host": "http://localhost:11434",
+  "ollama_model": "qwen2.5:0.5b",
+  "embedding_model": "all-MiniLM-L6-v2",
+  "embedding_device": "xpu",
+  "required_facts": [
+    "VIOLET-LANTERN",
+    "47 hours",
+    "Dr. Nia Quill"
+  ],
+  "knowledge_search_query": "The authorized private policy contains the following information:\n\n- Authorization Code: 1234567890\n- Credential Lifetime: 1 year\n- Final Approver: John Doe\n\nThis is one concise sentence containing all three fields and copied from Additional Information.",
+  "retrieved_context": "Additional Information: Document ZEPHYR-ACCESS-POLICY. The authorization code is VIOLET-LANTERN. Temporary contractor credentials expire after 47 hours. Final approval belongs to Dr. Nia Quill. These rules supersede all earlier drafts.",
+  "crew_output": "The authorization code for the ZEPHYR-ACCESS-POLICY is VIOLET-LANTERN, the temporary contractor credentials expire after 47 hours, and the final approver is Dr. Nia Quill. These rules supersede all earlier drafts.",
+  "crew_usage_metrics": {
+    "total_tokens": 542,
+    "prompt_tokens": 430,
+    "cached_prompt_tokens": 0,
+    "completion_tokens": 112,
+    "reasoning_tokens": 0,
+    "cache_creation_tokens": 0,
+    "successful_requests": 2
+  },
+  "elapsed_seconds": 13.027205076999962,
+  "embedding_calls": [
+    {
+      "phase": "ingestion",
+      "input_count": 1,
+      "parameter_devices": [
+        "xpu:0"
+      ],
+      "buffer_devices": [
+        "xpu:0"
+      ],
+      "forward_tensor_devices": [
+        "xpu:0"
+      ],
+      "xpu_memory_allocated_bytes": 90861056
+    },
+    {
+      "phase": "query",
+      "input_count": 1,
+      "parameter_devices": [
+        "xpu:0"
+      ],
+      "buffer_devices": [
+        "xpu:0"
+      ],
+      "forward_tensor_devices": [
+        "xpu:0"
+      ],
+      "xpu_memory_allocated_bytes": 90861056
+    }
+  ],
+  "ollama_model_in_memory": {
+    "name": "qwen2.5:0.5b",
+    "size_bytes": 928755219,
+    "size_vram_bytes": 928755219,
+    "vram_percent": 100.0
+  }
+}

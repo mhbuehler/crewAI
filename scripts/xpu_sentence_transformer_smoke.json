@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "torch_version": "2.12.0+xpu",
+  "torch_xpu_runtime_version": "20250302",
+  "xpu_available": true,
+  "xpu_count": 4,
+  "xpu_name": "Intel(R) Arc(TM) Pro B60 Graphics",
+  "requested_device": "xpu",
+  "model_name": "all-MiniLM-L6-v2",
+  "parameter_devices": [
+    "xpu:0"
+  ],
+  "buffer_devices": [
+    "xpu:0"
+  ],
+  "forward_tensor_devices": [
+    "xpu:0"
+  ],
+  "embedding_count": 3,
+  "embedding_dimension": 384,
+  "embedding_norms": [
+    1.000000038907461,
+    1.0000000259856832,
+    1.0000000646920373
+  ],
+  "xpu_memory_allocated_bytes": 90861056
+}

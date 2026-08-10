@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "ollama_host": "http://localhost:11434",
+  "ollama_model": "qwen2.5:0.5b",
+  "required_facts": [
+    "BLUE-COMET",
+    "relay-cache",
+    "09:17 UTC"
+  ],
+  "crew_output": "The incident identifier is BLUE-COMET, the affected service was relay-cache, and the recovery time was at 09:17 UTC.",
+  "crew_usage_metrics": {
+    "total_tokens": 201,
+    "prompt_tokens": 171,
+    "cached_prompt_tokens": 0,
+    "completion_tokens": 30,
+    "reasoning_tokens": 0,
+    "cache_creation_tokens": 0,
+    "successful_requests": 1
+  },
+  "elapsed_seconds": 4.755422962829471,
+  "ollama_model_in_memory": {
+    "name": "qwen2.5:0.5b",
+    "size_bytes": 928755219,
+    "size_vram_bytes": 928755219,
+    "vram_percent": 100.0
+  }
+}
