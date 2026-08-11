@@ -85,7 +85,8 @@ successful HTTP response alone is not sufficient evidence. Currently, these XPU 
 | # | Contribution | Status | Acceptance criteria |
 |---|---|---|---|
 | PR-1 | [#6808: add XPU to embedding device options](https://github.com/crewAIInc/crewAI/pull/6808) | Open; checks passed and review feedback addressed | Maintainer approval and merge |
-| PR-2 | Add embedding factory forwarding tests for `device="xpu"` | Proposed | Unit tests prove the downstream callable receives `xpu`; describe this as configuration coverage, not hardware support |
+| PR-2 | Add embedding factory forwarding tests for `device="xpu"` | Proposed | Unit tests prove the downstream callable receives `xpu`; configuration coverage, not hardware support |
+| PR-3 | Validate, add test and documentation for OpenCLIP text and image embeddings with `device="xpu"` | Proposed | Correct vectors, verified model and tensor placement on XPU |
 | Smoke Test | Validate Sentence Transformer embeddings on real XPU hardware | In Progress (manual PASS) | Valid vectors, verified model/device placement, and no CPU fallback |
 | E2E-1 | Validate complete Crew kickoff against an XPU-backed local server | In Progress (manual PASS) | Correct output, confirmed Intel GPU use |
 | E2E-2 | Validate knowledge/RAG with XPU embeddings and a local LLM | In Progress (manual PASS) | Correct retrieval and answers, confirmed Intel GPU use |
@@ -135,7 +136,7 @@ while keeping documents and inference local.
 
 ### Upstreaming
 
-- Submit planned hardware-independent configuration tests to the main CrewAI repository (PR-1 & PR-2)
+- Submit planned hardware-independent configuration tests and documentation to the main CrewAI repository (PR-1, PR-2, and PR-3)
 - Propose a concise `crewAI-quickstarts` notebook after E2E tests are stable
 - Use a standalone repository if CrewAI has no suitable home for hardware-dependent
   tests
@@ -149,16 +150,11 @@ while keeping documents and inference local.
 - [ ] Follow up on PR-1 until merged
 - [x] Create an isolated XPU environment, run a Sentence Transformer embedding smoke test through CrewAI, and confirm XPU utilization
 - [ ] Prepare and submit PR-2 testing embedding factory forwarding
+- [ ] Validate OpenCLIP text and image embeddings with `device="xpu"`, confirm model and tensor placement
+- [ ] Prepare PR-3 with configuration tests and documentation if OpenCLIP `device="xpu"` test passes
 - [x] Create a repeatable setup for running the XPU E2E tests
 - [x] Implement E2E-1: private local summarization
 - [ ] Ask `crewAI-quickstarts` maintainers whether a companion XPU notebook fits their
       preferred scope and directory structure
 - [ ] Submit E2E test(s) as notebook(s) to the quickstarts repo if maintainers agree
 - [x] Implement E2E-2: private policy-document Q&A with XPU embeddings
-
-## Future Work
-
-- **ONNX/OpenVINO:** Validate `OpenVINOExecutionProvider` on Intel GPU, verify CrewAI
-  forwards the provider configuration, and add tests and documentation.
-- **OpenCLIP:** Validate text and image embeddings with `device="xpu"`, confirm model
-  and tensor placement, and add configuration tests and documentation.
