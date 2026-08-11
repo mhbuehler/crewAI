@@ -31,11 +31,11 @@ As of WW29, the separately tracked CrewAI unit test status:
 
 | Metric | Count | Notes |
 |---|---:|---|
-| Total unit tests across run scope | 5,427 | Blocked modules were expanded to individual tests; parametrized module-level errors may inflate the practical total |
-| Pure software unit tests | 5,427 | No GPU/XPU/CUDA-specific unit test paths, markers, or hardware dependencies in this scope |
+| Total unit tests across run scope | 5,427 | Blocked modules expanded to individual tests, but parametrized tests in module-level errors could result in a larger actual total |
+| Pure software unit tests | 5,427 | No GPU/XPU/CUDA-specific unit test paths, markers, or hardware dependencies |
 | Passing pure software unit tests | 5,229 | Plus 1 xfail (not included in passing count) |
 | Blocked pure software unit tests | 191 | 69 skipped + 122 collection/setup blocked tests |
-| Failed pure software unit tests | 6 | Functional failures unrelated to XPU path coverage |
+| Failed pure software unit tests | 6 | Not related to XPU path coverage |
 | XPU-runnable unit tests | 0 | No unit tests in this scope directly execute XPU-specific paths |
 | Passing XPU-runnable unit tests | 0 | N/A |
 | Blocked XPU-runnable unit tests | 0 | N/A |
@@ -92,6 +92,8 @@ successful HTTP response alone is not sufficient evidence. Currently, these XPU 
 
 ## XPU Test Plan
 
+[Full README](scripts/README.md)
+
 ### Smoke Test: Sentence Transformer embeddings on XPU
 
 **Goal:** Prove the local embedding path works on Intel XPU before building
@@ -101,6 +103,8 @@ E2E tests.
 - Build a Sentence Transformer embedder through CrewAI with `device="xpu"`
 - Generate valid embeddings for sample text
 - Confirm XPU execution and reject CPU fallback
+
+**Status:** [Script implemented](scripts/xpu_sentence_transformer_smoke.py) and passing manually ([output](scripts/xpu_sentence_transformer_smoke.json)).
 
 ### E2E-1: Private local summarization
 
@@ -113,6 +117,8 @@ reports without sending their contents to a hosted model.
 - Run `Crew.kickoff()` and verify required facts appear in the result
 - Confirm Intel GPU execution and reject an entirely CPU inference run
 
+**Status:** [Script implemented](scripts/xpu_ollama_crew_e2e.py) and passing manually ([output](scripts/xpu_ollama_crew_e2e.json)).
+
 ### E2E-2: Private policy-document Q&A
 
 **Use case:** answer employee questions from internal policies or product manuals
@@ -124,6 +130,8 @@ while keeping documents and inference local.
 - Ask questions whose answers exist only in the test document
 - Verify the answer contains facts available only in the test document
 - Confirm XPU embedding execution and Intel GPU acceleration for Ollama
+
+**Status:** [Script implemented](scripts/xpu_rag_ollama_e2e.py) and passing manually ([output](scripts/xpu_rag_ollama_e2e.json)).
 
 ### Upstreaming
 
@@ -145,7 +153,7 @@ while keeping documents and inference local.
 - [x] Implement E2E-1: private local summarization
 - [ ] Ask `crewAI-quickstarts` maintainers whether a companion XPU notebook fits their
       preferred scope and directory structure
-- [ ] Submit the quickstart if maintainers agree and E2E-1 is reproducible
+- [ ] Submit E2E test(s) as notebook(s) to the quickstarts repo if maintainers agree
 - [x] Implement E2E-2: private policy-document Q&A with XPU embeddings
 
 ## Future Work
