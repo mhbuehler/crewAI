@@ -31,7 +31,9 @@ python3 -m venv .venv-xpu
 source .venv-xpu/bin/activate
 python -m pip install --upgrade pip
 
-python -m pip install --no-cache-dir 'torch==2.12.0+xpu' \
+python -m pip install --no-cache-dir \
+  'torch==2.12.0+xpu' \
+  'torchvision==0.27.0+xpu' \
   --index-url https://download.pytorch.org/whl/xpu
 
 python -m pip install --no-cache-dir sentence-transformers chromadb open-clip-torch pillow

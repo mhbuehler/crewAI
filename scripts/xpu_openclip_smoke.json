@@ -1,0 +1,37 @@
+{
+  "status": "PASS",
+  "torch_version": "2.12.0+xpu",
+  "torch_xpu_runtime_version": "20250302",
+  "xpu_available": true,
+  "xpu_count": 4,
+  "xpu_name": "Intel(R) Arc(TM) Pro B60 Graphics",
+  "requested_device": "xpu",
+  "model_name": "ViT-B-32",
+  "checkpoint": "laion2b_s34b_b79k",
+  "parameter_devices": [
+    "xpu:0"
+  ],
+  "buffer_devices": [
+    "xpu:0"
+  ],
+  "text_forward_tensor_devices": [
+    "xpu:0"
+  ],
+  "text_embedding_count": 3,
+  "text_embedding_dimension": 512,
+  "text_embedding_norms": [
+    1.0000000368622084,
+    1.000000045406622,
+    0.9999999039436852
+  ],
+  "image_forward_tensor_devices": [
+    "xpu:0"
+  ],
+  "image_count": 2,
+  "image_embedding_dimension": 512,
+  "image_embedding_norms": [
+    0.9999999882240423,
+    0.9999999961274967
+  ],
+  "xpu_memory_allocated_bytes": 607755264
+}

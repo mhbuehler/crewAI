@@ -59,6 +59,18 @@ def _module_devices(model: Any) -> tuple[set[str], set[str]]:
     return parameter_devices, buffer_devices
 
 
+def _register_forward_device_hooks(
+    model: Any, observed_devices: set[str], torch: Any
+) -> list[Any]:
+    """Observe tensor devices for direct encoder calls and regular forwards."""
+
+    def observe(_module: Any, args: tuple[Any, ...], output: Any) -> None:
+        observed_devices.update(_tensor_devices(args, torch))
+        observed_devices.update(_tensor_devices(output, torch))
+
+    return [module.register_forward_hook(observe) for module in model.modules()]
+
+
 def _validate_vectors(
     raw_vectors: Any, expected_count: int, label: str
 ) -> tuple[int, list[float]]:
@@ -171,17 +183,13 @@ def run_smoke_test(
 
     # --- Text embeddings ---
     text_forward_devices: set[str] = set()
-
-    def observe_text_forward(_module: Any, args: tuple[Any, ...], output: Any) -> None:
-        text_forward_devices.update(_tensor_devices(args, torch))
-        text_forward_devices.update(_tensor_devices(output, torch))
-
-    hook = model.register_forward_hook(observe_text_forward)
+    hooks = _register_forward_device_hooks(model, text_forward_devices, torch)
     try:
         text_vectors = embedder(list(texts))
         torch.xpu.synchronize()
     finally:
-        hook.remove()
+        for hook in hooks:
+            hook.remove()
 
     _require(
         any(v.startswith("xpu") for v in text_forward_devices),
@@ -192,19 +200,13 @@ def run_smoke_test(
     # --- Image embeddings ---
     test_images = _make_test_images(2)
     image_forward_devices: set[str] = set()
-
-    def observe_image_forward(
-        _module: Any, args: tuple[Any, ...], output: Any
-    ) -> None:
-        image_forward_devices.update(_tensor_devices(args, torch))
-        image_forward_devices.update(_tensor_devices(output, torch))
-
-    hook = model.register_forward_hook(observe_image_forward)
+    hooks = _register_forward_device_hooks(model, image_forward_devices, torch)
     try:
         image_vectors = embedder(test_images)
         torch.xpu.synchronize()
     finally:
-        hook.remove()
+        for hook in hooks:
+            hook.remove()
 
     _require(
         any(v.startswith("xpu") for v in image_forward_devices),
