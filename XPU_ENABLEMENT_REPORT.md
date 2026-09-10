@@ -2,8 +2,8 @@
 
 ## Summary
 
-CrewAI is primarily an orchestration framework, not a model runtime. XPU enablement
-will initially focus on three practical steps:
+CrewAI is an orchestration framework, not a model runtime. XPU enablement
+will focus on three things:
 
 1. Validate Sentence Transformer embeddings on Intel XPU.
 2. Run a complete CrewAI workflow against a local LLM server on Intel XPU.
@@ -45,19 +45,19 @@ As of WW29, the separately tracked CrewAI unit test status:
 **Key takeaway:** current CrewAI unit-test coverage in this run scope is
 software-only. Unit tests provide useful regression signal, but do not prove XPU execution.
 
-### Two Test Command Scopes
+### Two Test Commands
 
 Two commands were used across sessions:
 
-| Command | Intended scope | Observed role in this report |
+| Command | Scope | Role in this report |
 |---|---|---|
 | `uv run pytest lib/crewai/tests/ -x -q` | Targeted core framework tests | Primary command for PR validation and contributor guidance |
 | `uv run pytest .` | Whole-repo discovery from root (includes CLI, tools) | Broader and potentially noisier for our purposes |
 
 This report treats
 `uv run pytest lib/crewai/tests/ -x -q` as the primary baseline command for
-CrewAI framework validation, and references `uv run pytest .` as a broader,
-optional repository-wide run which include the CLI, tools, files, and shared plumbing in the `crewai-core` package.
+CrewAI framework validation, and references `uv run pytest .` as
+optional when including the CLI, tools, files, and other plumbing is desired.
 
 ### Baseline Snapshot
 
@@ -67,7 +67,7 @@ The PR-1 validation snapshot from the targeted command:
 |---|---|---|
 | `uv run pytest lib/crewai/tests/ -x -q` | **4,588 passed** | Regression baseline captured during PR-1 validation in WW32; not an XPU hardware test |
 
-### XPU coverage status
+### XPU Coverage Status
 
 | Test | Status |
 |---|---|
@@ -76,8 +76,8 @@ The PR-1 validation snapshot from the targeted command:
 | Full `Crew.kickoff()` against an XPU-backed local LLM | Implemented; manual PASS  |
 | Knowledge/RAG with XPU embeddings and local LLM | Implemented; manual PASS |
 
-An XPU test must confirm that the relevant model computation uses the Intel GPU. A
-successful HTTP response alone is not sufficient evidence. Currently, these XPU checks are run manually via scripts and saved JSON evidence; they are not part of an automated CI.
+All XPU tests confirm that the relevant model computation uses the Intel GPU. Currently, they
+are run manually via scripts and saved JSON evidence. They are not part of an automated CI.
 
 
 ## Contributions
@@ -136,7 +136,7 @@ while keeping documents and inference local.
 
 ### Upstreaming
 
-- Submit planned hardware-independent configuration tests and documentation to the main CrewAI repository (PR-1, PR-2, and PR-3)
+- Submit planned configuration tests and documentation to the main CrewAI repository (PR-1, PR-2, and PR-3)
 - Propose a concise `crewAI-quickstarts` notebook after E2E tests are stable
 - Use a standalone repository if CrewAI has no suitable home for hardware-dependent
   tests

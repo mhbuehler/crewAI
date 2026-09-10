@@ -7,6 +7,7 @@ Manual hardware checks for CrewAI on Intel GPU.
 | Script | Checks |
 |---|---|
 | [xpu_sentence_transformer_smoke.py](xpu_sentence_transformer_smoke.py) | CrewAI embeddings run on PyTorch XPU with valid vectors |
+| [xpu_openclip_smoke.py](xpu_openclip_smoke.py) | OpenCLIP text and image embeddings run on XPU with verified model/tensor placement |
 | [xpu_ollama_crew_e2e.py](xpu_ollama_crew_e2e.py) | `Crew.kickoff()` succeeds and Ollama reports model loaded in VRAM |
 | [xpu_rag_ollama_e2e.py](xpu_rag_ollama_e2e.py) | RAG ingestion/query embeddings run on XPU and final answer is correct |
 
@@ -33,7 +34,7 @@ python -m pip install --upgrade pip
 python -m pip install --no-cache-dir 'torch==2.12.0+xpu' \
   --index-url https://download.pytorch.org/whl/xpu
 
-python -m pip install --no-cache-dir sentence-transformers chromadb
+python -m pip install --no-cache-dir sentence-transformers chromadb open-clip-torch pillow
 
 python -m pip install --no-cache-dir --no-deps \
   -e ./lib/crewai-core \
@@ -74,6 +75,7 @@ curl -fsS "${OLLAMA_HOST}/api/ps"
 
 ```bash
 python scripts/xpu_sentence_transformer_smoke.py
+python scripts/xpu_openclip_smoke.py
 python scripts/xpu_ollama_crew_e2e.py
 python scripts/xpu_rag_ollama_e2e.py
 ```
@@ -81,15 +83,24 @@ python scripts/xpu_rag_ollama_e2e.py
 Saved sample outputs:
 
 - [xpu_sentence_transformer_smoke.json](xpu_sentence_transformer_smoke.json)
+- [xpu_openclip_smoke.json](xpu_openclip_smoke.json)
 - [xpu_ollama_crew_e2e.json](xpu_ollama_crew_e2e.json)
 - [xpu_rag_ollama_e2e.json](xpu_rag_ollama_e2e.json)
 
 ## Pass Criteria
 
-Smoke test:
+Sentence Transformer smoke test:
 
 - Model parameters and forward tensors are on `xpu:*`
 - Embeddings are valid and non-degenerate
+- XPU memory allocation is nonzero
+
+OpenCLIP smoke test:
+
+- Model parameters and forward tensors are on `xpu:*` for both text and image paths
+- Text and image embeddings share the same dimension (CLIP shared embedding space)
+- Embeddings are valid, normalized, and non-degenerate
+- Cross-modal embeddings differ (text != image)
 - XPU memory allocation is nonzero
 
 E2E-1:
