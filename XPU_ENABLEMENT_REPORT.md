@@ -3,15 +3,16 @@
 ## Summary
 
 CrewAI is an orchestration framework, not a model runtime. XPU enablement
-will focus on three things:
+will focus on four things:
 
 1. Validate Sentence Transformer embeddings on Intel XPU.
-2. Run a complete CrewAI workflow against a local LLM server on Intel XPU.
-3. Combine the validated embedding and LLM paths in a knowledge/RAG E2E test.
+2. Validate OpenCLIP text and image embeddings on Intel XPU.
+3. Run a complete CrewAI workflow against a local LLM server on Intel XPU.
+4. Combine the validated embedding and LLM paths in a knowledge/RAG E2E test.
 
 The first contribution, [PR-1](https://github.com/crewAIInc/crewAI/pull/6808),
 documents `xpu` for Instructor and Sentence Transformer embeddings and tests that the
-configuration is preserved. Real XPU validation is currently manual and all three
+configuration is preserved. Real XPU validation is currently manual and all four
 XPU script checks are passing; automated CI coverage for those checks is not in place yet.
 
 ## Repos Analyzed
@@ -73,6 +74,7 @@ The PR-1 validation snapshot from the targeted command:
 |---|---|
 | Sentence Transformer configuration compatibility | [PR-1](https://github.com/crewAIInc/crewAI/pull/6808) parameterizes the existing `cuda` test across all documented devices, adding `cpu`, `mps`, and `xpu` cases |
 | Real Sentence Transformer embedding through CrewAI on XPU | Implemented; manual PASS |
+| OpenCLIP text and image embeddings through CrewAI on XPU | Implemented; manual PASS |
 | Full `Crew.kickoff()` against an XPU-backed local LLM | Implemented; manual PASS  |
 | Knowledge/RAG with XPU embeddings and local LLM | Implemented; manual PASS |
 
@@ -86,8 +88,9 @@ are run manually via scripts and saved JSON evidence. They are not part of an au
 |---|---|---|---|
 | PR-1 | [#6808: add XPU to embedding device options](https://github.com/crewAIInc/crewAI/pull/6808) | Open; checks passed and review feedback addressed | Maintainer approval and merge |
 | PR-2 | Add embedding factory forwarding tests for `device="xpu"` | Proposed | Unit tests prove the downstream callable receives `xpu`; configuration coverage, not hardware support |
-| PR-3 | Validate, add test and documentation for OpenCLIP text and image embeddings with `device="xpu"` | Proposed | Correct vectors, verified model and tensor placement on XPU |
+| PR-3 | Validate, add test and documentation for OpenCLIP text and image embeddings with `device="xpu"` | Validation complete; PR proposed | Correct vectors, verified model and tensor placement on XPU |
 | Smoke Test | Validate Sentence Transformer embeddings on real XPU hardware | In Progress (manual PASS) | Valid vectors, verified model/device placement, and no CPU fallback |
+| OpenCLIP Smoke Test | Validate text and image embeddings on real XPU hardware | In Progress (manual PASS) | Valid vectors, shared embedding space, verified model/tensor placement, and no CPU fallback |
 | E2E-1 | Validate complete Crew kickoff against an XPU-backed local server | In Progress (manual PASS) | Correct output, confirmed Intel GPU use |
 | E2E-2 | Validate knowledge/RAG with XPU embeddings and a local LLM | In Progress (manual PASS) | Correct retrieval and answers, confirmed Intel GPU use |
 
@@ -106,6 +109,17 @@ E2E tests.
 - Confirm XPU execution and reject CPU fallback
 
 **Status:** [Script implemented](scripts/xpu_sentence_transformer_smoke.py) and passing manually ([output](scripts/xpu_sentence_transformer_smoke.json)).
+
+### Smoke Test: OpenCLIP text and image embeddings on XPU
+
+**Goal:** Prove both OpenCLIP encoder paths run through CrewAI on Intel XPU.
+
+- Build the OpenCLIP `ViT-B-32` embedder through CrewAI with `device="xpu"`
+- Generate normalized text and image embeddings in the shared 512-dimensional space
+- Confirm model parameters, buffers, and forward tensors are on `xpu:0`
+- Confirm nonzero XPU memory allocation and reject CPU fallback
+
+**Status:** [Script implemented](scripts/xpu_openclip_smoke.py) and passing manually ([output](scripts/xpu_openclip_smoke.json)).
 
 ### E2E-1: Private local summarization
 
@@ -150,7 +164,7 @@ while keeping documents and inference local.
 - [ ] Follow up on PR-1 until merged
 - [x] Create an isolated XPU environment, run a Sentence Transformer embedding smoke test through CrewAI, and confirm XPU utilization
 - [ ] Prepare and submit PR-2 testing embedding factory forwarding
-- [ ] Validate OpenCLIP text and image embeddings with `device="xpu"`, confirm model and tensor placement
+- [x] Validate OpenCLIP text and image embeddings with `device="xpu"`, confirm model and tensor placement
 - [ ] Prepare PR-3 with configuration tests and documentation if OpenCLIP `device="xpu"` test passes
 - [x] Create a repeatable setup for running the XPU E2E tests
 - [x] Implement E2E-1: private local summarization
