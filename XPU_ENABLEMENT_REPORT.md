@@ -11,9 +11,11 @@ will focus on four things:
 4. Combine the validated embedding and LLM paths in a knowledge/RAG E2E test.
 
 The first contribution, [PR-1](https://github.com/crewAIInc/crewAI/pull/6808),
-documents `xpu` for Instructor and Sentence Transformer embeddings and tests that the
-configuration is preserved. Real XPU validation is currently manual and all four
-XPU script checks are passing; automated CI coverage for those checks is not in place yet.
+was merged. It documents `xpu` for Instructor and Sentence
+Transformer embeddings and tests that the configuration is preserved. Real XPU
+validation is currently manual and all four XPU script checks are passing;
+automated CI coverage for the E2E RAG on XPU test is in the
+[planning/design](#ci-integration-draft-knowledgerag-e2e) phase.
 
 ## Repos Analyzed
 
@@ -26,47 +28,56 @@ XPU script checks are passing; automated CI coverage for those checks is not in 
 
 ## Testing
 
-### Unit Test Analysis (Summary)
+### Unit Test Scope
 
-As of WW29, the separately tracked CrewAI unit test status:
+The primary reporting scope is `lib/crewai/tests/` because it is the scope
+called "all tests" in the contributor guide, it is the core framework test
+directory exercised by the pull-request workflow, and it contains the test
+changed by PR-1. Counts from broader scopes must be reported separately.
 
-| Metric | Count | Notes |
-|---|---:|---|
-| Total unit tests across run scope | 5,427 | Blocked modules expanded to individual tests, but parametrized tests in module-level errors could result in a larger actual total |
-| Pure software unit tests | 5,427 | No GPU/XPU/CUDA-specific unit test paths, markers, or hardware dependencies |
-| Passing pure software unit tests | 5,229 | Plus 1 xfail (not included in passing count) |
-| Blocked pure software unit tests | 191 | 69 skipped + 122 collection/setup blocked tests |
-| Failed pure software unit tests | 6 | Not related to XPU path coverage |
-| XPU-runnable unit tests | 0 | No unit tests in this scope directly execute XPU-specific paths |
-| Passing XPU-runnable unit tests | 0 | N/A |
-| Blocked XPU-runnable unit tests | 0 | N/A |
-| Failed XPU-runnable unit tests | 0 | N/A |
-| Newly added XPU-specific unit tests | 0 | N/A |
-
-**Key takeaway:** current CrewAI unit-test coverage in this run scope is
-software-only. Unit tests provide useful regression signal, but do not prove XPU execution.
-
-### Two Test Commands
-
-Two commands were used across sessions:
-
-| Command | Scope | Role in this report |
+| Command | Scope | Use |
 |---|---|---|
-| `uv run pytest lib/crewai/tests/ -x -q` | Targeted core framework tests | Primary command for PR validation and contributor guidance |
-| `uv run pytest .` | Whole-repo discovery from root (includes CLI, tools) | Broader and potentially noisier for our purposes |
+| `uv run pytest lib/crewai/tests/ -x -q` | Core CrewAI framework package | Exact contributor-guide smoke command; stops at the first failure, so do not use it to calculate outcome totals |
+| `uv run pytest lib/crewai/tests/` | Core CrewAI framework package | Primary scope for the fresh unit-test analysis |
+| `uv run pytest` | Five package test roots configured in `pyproject.toml` | Optional workspace-wide follow-up covering CrewAI, tools, files, CLI, and core |
+| `uv run pytest .` | Unbounded recursive discovery, including paths such as `lib/devtools/tests` that are not in configured `testpaths` | Do not use for the headline unit-test metrics |
 
-This report treats
-`uv run pytest lib/crewai/tests/ -x -q` as the primary baseline command for
-CrewAI framework validation, and references `uv run pytest .` as
-optional when including the CLI, tools, files, and other plumbing is desired.
+### Fresh Manual Run
 
-### Baseline Snapshot
+Run from a clean checkout of the desired upstream `main` revision. Use the
+project environment rather than an unrelated active virtual environment, and
+record the revision and tool versions with the result.
 
-The PR-1 validation snapshot from the targeted command:
+```bash
+git rev-parse HEAD
+git status --short
+uname -a
+nproc
+uv --version
+uv sync --python 3.12 --all-groups --all-extras
+uv run --python 3.12 python --version
 
-| Check | Result | Meaning |
-|---|---|---|
-| `uv run pytest lib/crewai/tests/ -x -q` | **4,588 passed** | Regression baseline captured during PR-1 validation in WW32; not an XPU hardware test |
+mkdir -p unit-test-artifacts
+set -o pipefail
+uv run --python 3.12 pytest lib/crewai/tests/ \
+  -ra \
+  --tb=long \
+  --junitxml=unit-test-artifacts/crewai-py312.xml \
+  2>&1 | tee unit-test-artifacts/crewai-py312.log
+```
+
+This deliberately omits `-x` so every outcome is reported. `-ra` prints skip,
+xfail, failure, and error reasons; `--tb=long` preserves import and fixture
+tracebacks. Do not set real provider credentials or start local services for
+the baseline, because doing so changes which integration tests skip.
+
+If the run reports collection or setup errors, rerun only the affected files
+serially with `-n 0 -vv -ra --tb=long`. Treat that as diagnostic evidence, not
+as a replacement baseline.
+
+### Past and Current Results
+
+For UT coverage status by work week, see the internal [tracker](https://intel.sharepoint.com/:x:/r/sites/appliedaiframeworks/Shared%20Documents/Post%20Training%20FWKs/XPU%20enablement/XPU%20enablement%20tracking.xlsx?d=w31b4d0b908594666a0e28781d22de320&csf=1&web=1&e=8sTqPD) and for a blocked test breakdown, see the [wiki page](https://wiki.ith.intel.com/spaces/posttraining/pages/4973765370/Agentic+Fwks+UT+Status). 
 
 ### XPU Coverage Status
 
@@ -79,14 +90,39 @@ The PR-1 validation snapshot from the targeted command:
 | Knowledge/RAG with XPU embeddings and local LLM | Implemented; manual PASS |
 
 All XPU tests confirm that the relevant model computation uses the Intel GPU. Currently, they
-are run manually via scripts and saved JSON evidence. They are not part of an automated CI.
+are run manually via scripts and saved JSON evidence. They are not part of an automated CI, though
+a CI integration plan is proposed below and tracked [here](https://intel.sharepoint.com/:x:/r/sites/appliedaiframeworks/Shared%20Documents/Post%20Training%20FWKs/XPU%20enablement/XPU%20enablement%20tracking.xlsx?d=w31b4d0b908594666a0e28781d22de320&csf=1&web=1&e=yhLeGp).
+
+### CI Integration Draft: Knowledge/RAG E2E
+
+The first automated CrewAI case should be based on the flow validated by
+[`xpu_rag_ollama_e2e.py`](scripts/xpu_rag_ollama_e2e.py). The
+script uses Ollama's native `/api/tags` and `/api/ps` endpoints, including
+`size_vram`, as part of its pass criteria, so if vLLM is chosen as the target local LLM service,
+it will require some refactoring. 
+
+Recommended job flow:
+
+1. Schedule the job on a dedicated Intel GPU runner and expose the required
+  devices to the job and model service.
+2. Start a pinned XPU-enabled Ollama build, restore the model cache, pull the pinned
+  model when absent, and wait for `/api/tags` to become ready.
+3. Install the pinned PyTorch XPU wheel before installing the local CrewAI packages
+  with `--no-deps`; do not use the repository's CPU PyTorch for this job.
+4. Run the E2E script with `OLLAMA_HOST`, `OLLAMA_MODEL`, and
+  `SENTENCE_TRANSFORMER_MODEL` set (or vLLM corrolaries). Preserve the process exit code as
+  the job result.
+5. Publish the JSON evidence, console log, model server log, package versions, hardware
+  inventory, and JUnit XML as artifacts even when the test fails.
+6. Stop the service and clean temporary CrewAI storage while retaining model caches
+  managed by the runner.
 
 
 ## Contributions
 
 | # | Contribution | Status | Acceptance criteria |
 |---|---|---|---|
-| PR-1 | [#6808: add XPU to embedding device options](https://github.com/crewAIInc/crewAI/pull/6808) | Open; checks passed and review feedback addressed | Maintainer approval and merge |
+| PR-1 | [#6808: add XPU to embedding device options](https://github.com/crewAIInc/crewAI/pull/6808) | Merged | Completed |
 | PR-2 | Add embedding factory forwarding tests for `device="xpu"` | Proposed | Unit tests prove the downstream callable receives `xpu`; configuration coverage, not hardware support |
 | PR-3 | Validate, add test and documentation for OpenCLIP text and image embeddings with `device="xpu"` | Validation complete; PR proposed | Correct vectors, verified model and tensor placement on XPU |
 | Smoke Test | Validate Sentence Transformer embeddings on real XPU hardware | In Progress (manual PASS) | Valid vectors, verified model/device placement, and no CPU fallback |
@@ -157,18 +193,18 @@ while keeping documents and inference local.
 
 ## Next Steps
 
-- [x] Run the CrewAI unit suite: 4,588 tests passed
+- [x] Capture the PR-1 unit-test baseline: 4,588 tests passed
+- [x] Rerun `lib/crewai/tests/` on the current `main` revision and update the unit test counts
 - [x] Analyze CrewAI's repo for vendor-specific text, locating local embedding and LLM provider paths
 - [x] Analyze the examples, quickstarts, and community repositories
 - [x] Prepare and submit PR documenting XPU embedding device options
-- [ ] Follow up on PR-1 until merged
+- [x] Follow up on PR-1 until merged
 - [x] Create an isolated XPU environment, run a Sentence Transformer embedding smoke test through CrewAI, and confirm XPU utilization
-- [ ] Prepare and submit PR-2 testing embedding factory forwarding
+- [x] Implement E2E-1: private local summarization
+- [x] Implement E2E-2: private policy-document Q&A with XPU embeddings
 - [x] Validate OpenCLIP text and image embeddings with `device="xpu"`, confirm model and tensor placement
+- [ ] Prepare and submit PR-2 testing embedding factory forwarding
 - [ ] Prepare PR-3 with configuration tests and documentation if OpenCLIP `device="xpu"` test passes
 - [x] Create a repeatable setup for running the XPU E2E tests
-- [x] Implement E2E-1: private local summarization
-- [ ] Ask `crewAI-quickstarts` maintainers whether a companion XPU notebook fits their
-      preferred scope and directory structure
-- [ ] Submit E2E test(s) as notebook(s) to the quickstarts repo if maintainers agree
-- [x] Implement E2E-2: private policy-document Q&A with XPU embeddings
+- [x] Submit E2E test(s) as notebook(s) to the quickstarts repo
+- [x] Add E2E-2 local RAG test to internal CI plan
